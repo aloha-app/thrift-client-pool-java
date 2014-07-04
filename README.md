@@ -9,5 +9,5 @@ A Thrift Client pool for Java
 * Multi Backend Servers support
 * Backend Servers replace on the fly
 * java.io.Closeable resources (for try with resources)
-* Easy of use
+* Ease of use
 * jdk 1.8 only
