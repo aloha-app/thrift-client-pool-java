@@ -38,6 +38,7 @@ public class TestThriftClientPool {
         config.setTimeout(10);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
                 e -> new Client(new TBinaryProtocol(new TFramedTransport(e))), config);
+        // pool.setServices(serverList);
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 

@@ -8,7 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The thrift client which hold the connection to backend server.
+ * The thrift client which hold the connection to backend server.<br/>
+ * 
+ * ThriftClient is not thread-safe, you must obtain separately from
+ * {@link ThriftClientPool} for each thread.
  * 
  * @author javamonk
  * @createTime 2014年7月4日 下午3:50:51

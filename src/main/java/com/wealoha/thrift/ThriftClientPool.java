@@ -38,6 +38,8 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
 
     private List<ServiceInfo> services;
 
+    private boolean serviceReset = false;
+
     private final PoolConfig poolConfig;
 
     /**
@@ -59,6 +61,16 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
      */
     public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory factory,
             PoolConfig config) {
+        if (services == null || services.size() == 0) {
+            throw new IllegalArgumentException("services is empty!");
+        }
+        if (factory == null) {
+            throw new IllegalArgumentException("factory is empty!");
+        }
+        if (config == null) {
+            throw new IllegalArgumentException("config is empty!");
+        }
+
         this.services = services;
         this.clientFactory = factory;
         this.poolConfig = config;
@@ -117,11 +129,34 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
                     client.closeClient();
                     return false;
                 }
+
+                // check if return client in current service list if 
+                if (serviceReset) {
+                    if (!services.contains(client.getServiceInfo())) {
+                        logger.warn("not return object cuase it's from previous config {}", client);
+                        client.closeClient();
+                        return false;
+                    }
+                }
+
                 // reset
                 client.setFinish(false);
                 return super.validateObject(p);
             }
         }, poolConfig);
+    }
+
+    /**
+     * set new services for this pool
+     * 
+     * @param services
+     */
+    public void setServices(List<ServiceInfo> services) {
+        if (services == null || services.size() == 0) {
+            throw new IllegalArgumentException("services is empty!");
+        }
+        this.services = services;
+        serviceReset = true;
     }
 
     private TTransport getTransport(ServiceInfo serviceInfo) {
