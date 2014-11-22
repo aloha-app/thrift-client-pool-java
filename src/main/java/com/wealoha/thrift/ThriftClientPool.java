@@ -79,16 +79,26 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
                     logger.info("transport open fail service: host={}, port={}",
                             serviceInfo.getHost(), serviceInfo.getPort());
                     if (poolConfig.isFailover()) {
-                        // mark current fail and try next, until none service available
-                        serviceList = removeFailService(serviceList, serviceInfo);
-                        serviceInfo = getRandomService(serviceList);
-                        transport = getTransport(serviceInfo);
+                        while (true) {
+                            try {
+                                // mark current fail and try next, until none service available
+                                serviceList = removeFailService(serviceList, serviceInfo);
+                                serviceInfo = getRandomService(serviceList);
+                                transport = getTransport(serviceInfo);
+                                logger.info("failover to next service host={}, port={}",
+                                        serviceInfo.getHost(), serviceInfo.getPort());
+                                transport.open();
+                                break;
+                            } catch (TTransportException e2) {
+                                logger.warn("failover fail, services left: {}", serviceList.size());
+                            }
+                        }
                     }
                     throw new ConnectionFailException();
                 }
 
                 ThriftClient<T> client = new ThriftClient<>(clientFactory.createClient(transport),
-                        pool);
+                        pool, serviceInfo);
 
                 logger.debug("create new object for pool {}", client);
                 return client;
@@ -104,6 +114,7 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
                 ThriftClient<T> client = p.getObject();
                 if (!client.isFinish()) {
                     logger.warn("not return object cause not finish {}", client);
+                    client.closeClient();
                     return false;
                 }
                 // reset

@@ -28,7 +28,10 @@ public class TestThriftClientPool {
 
     @Test
     public void testEcho() throws InterruptedException {
-        List<ServiceInfo> serverList = Arrays.asList(new ServiceInfo("127.0.0.1", 9090));
+        List<ServiceInfo> serverList = Arrays.asList( //
+                new ServiceInfo("127.0.0.1", 9092), //
+                new ServiceInfo("127.0.0.1", 9091), //
+                new ServiceInfo("127.0.0.1", 9090));
 
         PoolConfig config = new PoolConfig();
         config.setFailover(true);
@@ -49,8 +52,8 @@ public class TestThriftClientPool {
 
                             Iface iFace = thriftClient.iFace();
                             String response = iFace.echo("Hello " + counter + "!");
-                            thriftClient.finish();
                             logger.info("get response: {}", response);
+                            thriftClient.finish();
                         } catch (TException e) {
                             logger.error("thrift fail", e);
                         }

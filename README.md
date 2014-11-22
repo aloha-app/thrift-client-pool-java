@@ -3,7 +3,7 @@ thrift-client-pool-java
 
 A Thrift Client pool for Java
 
-* raw TServiceClient pool
+* raw and TypeSafe TServiceClient pool
 * Multi Backend Servers support
 * ~~Backend Servers replace on the fly~~ (unimplemented)
 * ~~Backend route by hash or any other algorithm~~ (unimplemented)
@@ -20,7 +20,7 @@ A Thrift Client pool for Java
     config.setTimeout(10);
     ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(
         serverList,
-        e -> new Client(new TBinaryProtocol(e)),
+        e -> new YourThriftService.Client(new TBinaryProtocol(e)),
         config);
 
     // or pre jdk1.8
@@ -29,7 +29,7 @@ A Thrift Client pool for Java
             
             @Override
             public TServiceClient createClient(TTransport transport) {
-                return new Client(new TBinaryProtocol(transport));
+                return new YourThriftService.Client(new TBinaryProtocol(transport));
             }
         }, config);
     

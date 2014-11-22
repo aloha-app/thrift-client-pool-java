@@ -21,12 +21,25 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
 
     private final ObjectPool<ThriftClient<T>> pool;
 
+    private final ServiceInfo serviceInfo;
+
     private boolean finish;
 
-    public ThriftClient(TServiceClient client, ObjectPool<ThriftClient<T>> pool) {
+    public ThriftClient(TServiceClient client, ObjectPool<ThriftClient<T>> pool,
+            ServiceInfo serviceInfo) {
         super();
         this.client = client;
         this.pool = pool;
+        this.serviceInfo = serviceInfo;
+    }
+
+    /**
+     * get backend service which this client current connect to
+     * 
+     * @return
+     */
+    public ServiceInfo getServiceInfo() {
+        return serviceInfo;
     }
 
     /**
@@ -41,15 +54,18 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
 
     @Override
     public void close() {
-        if (client != null && pool != null) {
-            try {
-                logger.info("return object to pool: " + this);
-                pool.returnObject(this);
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+        try {
+            logger.info("return object to pool: " + this);
+            pool.returnObject(this);
+        } catch (Exception e) {
+            logger.warn("return object fail, close", e);
+            closeClient();
         }
+    }
+
+    void closeClient() {
+        logger.debug("close client {}", this);
+        ThriftUtil.closeClient(this.client);
     }
 
     boolean isFinish() {
@@ -67,4 +83,5 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
     void setFinish(boolean finish) {
         this.finish = finish;
     }
+
 }
