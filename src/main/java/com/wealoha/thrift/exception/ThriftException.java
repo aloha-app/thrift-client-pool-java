@@ -16,4 +16,7 @@ public class ThriftException extends RuntimeException {
         super(message, cause);
     }
 
+    public ThriftException(String message) {
+        super(message);
+    }
 }

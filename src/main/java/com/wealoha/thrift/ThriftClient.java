@@ -58,8 +58,15 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
     @Override
     public void close() {
         try {
-            logger.info("return object to pool: " + this);
-            pool.returnObject(this);
+            if (finish) {
+                logger.info("return object to pool: " + this);
+                finish = false;
+                pool.returnObject(this);
+            } else {
+                logger.warn("not return object cause not finish {}", client);
+                closeClient();
+                pool.invalidateObject(this);
+            }
         } catch (Exception e) {
             logger.warn("return object fail, close", e);
             closeClient();
@@ -69,10 +76,6 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
     void closeClient() {
         logger.debug("close client {}", this);
         ThriftUtil.closeClient(this.client);
-    }
-
-    boolean isFinish() {
-        return finish;
     }
 
     /**

@@ -6,7 +6,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TFramedTransport;
 import org.junit.Test;
@@ -36,6 +35,8 @@ public class TestThriftClientPool {
         PoolConfig config = new PoolConfig();
         config.setFailover(true);
         config.setTimeout(10);
+        //        config.setMaxTotal(10);
+        //        config.setBlockWhenExhausted(true);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
                 e -> new Client(new TBinaryProtocol(new TFramedTransport(e))), config);
         // pool.setServices(serverList);
@@ -49,15 +50,26 @@ public class TestThriftClientPool {
                 @Override
                 public void run() {
                     try {
-                        try (ThriftClient<Client> thriftClient = pool.getClient()) {
-
-                            Iface iFace = thriftClient.iFace();
+                        try (ThriftClient<Client> client = pool.getClient()) {
+                            Iface iFace = client.iFace();
                             String response = iFace.echo("Hello " + counter + "!");
                             logger.info("get response: {}", response);
-                            thriftClient.finish();
-                        } catch (TException e) {
-                            logger.error("thrift fail", e);
+                            client.finish();
                         }
+                    } catch (Throwable e) {
+                        logger.error("get client fail", e);
+                    }
+                }
+            });
+
+            executorService.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        Iface iFace = pool.iface();
+                        String response = iFace.echo("Hello " + counter + "!");
+                        logger.info("get response: {}", response);
                     } catch (Throwable e) {
                         logger.error("get client fail", e);
                     }

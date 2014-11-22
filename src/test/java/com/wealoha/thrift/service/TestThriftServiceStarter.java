@@ -1,6 +1,5 @@
 package com.wealoha.thrift.service;
 
-import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.server.TThreadPoolServer.Args;
 import org.apache.thrift.transport.TFramedTransport;
@@ -27,7 +26,8 @@ public class TestThriftServiceStarter {
                     .inputTransportFactory(new TFramedTransport.Factory())
                     .outputTransportFactory(new TFramedTransport.Factory())
                     .processor(new Processor<>(new TestThriftServiceHandler()));
-            TServer server = new TThreadPoolServer(processor);
+            processor.maxWorkerThreads = 20;
+            TThreadPoolServer server = new TThreadPoolServer(processor);
 
             System.out.println("Starting the server...");
             server.serve();
