@@ -22,7 +22,7 @@ import com.wealoha.thrift.exception.ThriftException;
  * Pool for ThriftClient <br/>
  * 
  * <code>
- * ThriftClientPool pool = new ThriftClientPool(ClientMaker)
+ * ThriftClientPool pool = new ThriftClientPool(services, clientFactory)
  * </code>
  * 
  * @author javamonk
