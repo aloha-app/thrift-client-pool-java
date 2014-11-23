@@ -28,7 +28,6 @@ mvn clean package deploy
 Add to your pom.xml (1.0 formal version will release when we running long enough in real production environment.)
 
 ```Maven POM
-
 <dependency>
     <groupId>com.wealoha</groupId>
     <artifactId>thrift-client-pool-java</artifactId>
