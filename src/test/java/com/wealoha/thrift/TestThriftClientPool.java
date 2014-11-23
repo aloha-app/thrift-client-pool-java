@@ -7,7 +7,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.server.TThreadPoolServer.Args;
 import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TServerTransport;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import com.wealoha.thrift.service.TestThriftService;
 import com.wealoha.thrift.service.TestThriftService.Client;
 import com.wealoha.thrift.service.TestThriftService.Iface;
+import com.wealoha.thrift.service.TestThriftService.Processor;
+import com.wealoha.thrift.service.TestThriftServiceHandler;
 
 /**
  * 
@@ -23,7 +30,34 @@ import com.wealoha.thrift.service.TestThriftService.Iface;
  */
 public class TestThriftClientPool {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private static Logger logger = LoggerFactory.getLogger(TestThriftClientPool.class);
+
+    @BeforeClass
+    public static void setUp() {
+        int port = 9090;
+
+        try {
+            TServerTransport serverTransport = new TServerSocket(port);
+
+            Args processor = new TThreadPoolServer.Args(serverTransport)
+                    .inputTransportFactory(new TFramedTransport.Factory())
+                    .outputTransportFactory(new TFramedTransport.Factory())
+                    .processor(new Processor<>(new TestThriftServiceHandler()));
+            //            processor.maxWorkerThreads = 20;
+            TThreadPoolServer server = new TThreadPoolServer(processor);
+
+            logger.info("Starting test server...");
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    server.serve();
+                }
+            }).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test
     public void testEcho() throws InterruptedException {
@@ -79,6 +113,5 @@ public class TestThriftClientPool {
 
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.MINUTES);
-        TimeUnit.MINUTES.sleep(1);
     }
 }
