@@ -27,7 +27,7 @@ public class PoolConfig extends GenericObjectPoolConfig {
     /**
      * set default connection socket timeout
      * 
-     * @param timeout
+     * @param timeout timeout millis
      */
     public void setTimeout(int timeout) {
         this.timeout = timeout;

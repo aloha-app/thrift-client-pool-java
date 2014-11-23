@@ -90,4 +90,9 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
         this.finish = finish;
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        closeClient();
+    }
 }

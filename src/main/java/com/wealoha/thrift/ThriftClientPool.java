@@ -108,9 +108,10 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
                                 logger.warn("failover fail, services left: {}", serviceList.size());
                             }
                         }
+                    } else {
+                        throw new ConnectionFailException("host=" + serviceInfo.getHost() + ", ip="
+                                + serviceInfo.getPort(), e);
                     }
-                    throw new ConnectionFailException("host=" + serviceInfo.getHost() + ", ip="
-                            + serviceInfo.getPort(), e);
                 }
 
                 ThriftClient<T> client = new ThriftClient<>(clientFactory.createClient(transport),
@@ -139,6 +140,12 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
                 }
 
                 return super.validateObject(p);
+            }
+
+            @Override
+            public void destroyObject(PooledObject<ThriftClient<T>> p) throws Exception {
+                p.getObject().closeClient();
+                super.destroyObject(p);
             }
         }, poolConfig);
     }

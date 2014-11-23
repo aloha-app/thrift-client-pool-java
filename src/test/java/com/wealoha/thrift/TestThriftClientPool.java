@@ -34,7 +34,7 @@ public class TestThriftClientPool {
 
         PoolConfig config = new PoolConfig();
         config.setFailover(true);
-        config.setTimeout(10);
+        config.setTimeout(1000);
         //        config.setMaxTotal(10);
         //        config.setBlockWhenExhausted(true);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
@@ -79,5 +79,6 @@ public class TestThriftClientPool {
 
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.MINUTES);
+        TimeUnit.MINUTES.sleep(1);
     }
 }

@@ -26,7 +26,7 @@ public class TestThriftServiceStarter {
                     .inputTransportFactory(new TFramedTransport.Factory())
                     .outputTransportFactory(new TFramedTransport.Factory())
                     .processor(new Processor<>(new TestThriftServiceHandler()));
-            processor.maxWorkerThreads = 20;
+            //            processor.maxWorkerThreads = 20;
             TThreadPoolServer server = new TThreadPoolServer(processor);
 
             System.out.println("Starting the server...");
