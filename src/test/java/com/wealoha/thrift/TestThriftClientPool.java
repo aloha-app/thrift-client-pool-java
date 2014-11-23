@@ -6,12 +6,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.server.TThreadPoolServer.Args;
 import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -57,6 +59,27 @@ public class TestThriftClientPool {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testReusingIFace() throws TException {
+        List<ServiceInfo> serverList = Arrays.asList(new ServiceInfo("127.0.0.1", 9090));
+        PoolConfig config = new PoolConfig();
+        config.setFailover(true);
+        config.setTimeout(1000);
+        ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
+                e -> new Client(new TBinaryProtocol(new TFramedTransport(e))), config);
+
+        Iface iface = pool.iface();
+        iface.echo("Hello!");
+        boolean exceptionThrow = false;
+        try {
+            iface.echo("Hello again!");
+        } catch (IllegalStateException e) {
+            logger.info("exception thrown expected!", e);
+            exceptionThrow = true;
+        }
+        Assert.assertTrue("execption must thrown", exceptionThrow);
     }
 
     @Test
