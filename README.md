@@ -38,8 +38,8 @@ Add to your pom.xml (1.0 formal version will release when we running long enough
 ```Java
 // get a pool
 PoolConfig config = new PoolConfig();
-config.setFailover(true);
-config.setTimeout(10);
+config.setFailover(true); // optional
+config.setTimeout(1000); // optional
 ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(
     serverList,
     e -> new YourThriftService.Client(new TFramedTransport(new TBinaryProtocol(e))),  // ❶ 
