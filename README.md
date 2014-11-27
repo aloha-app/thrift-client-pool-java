@@ -40,6 +40,9 @@ Add to your pom.xml (1.0 formal version will release when we running long enough
 PoolConfig config = new PoolConfig();
 config.setFailover(true); // optional
 config.setTimeout(1000); // optional
+// PoolConfig is a instance of GenericObjectPoolConfig
+config.setMinIdle(3);
+config.setMaxTotal(30);
 ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(
     serverList,
     e -> new YourThriftService.Client(new TFramedTransport(new TBinaryProtocol(e))),  // ❶ 

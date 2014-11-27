@@ -92,7 +92,8 @@ public class TestThriftClientPool {
         PoolConfig config = new PoolConfig();
         config.setFailover(true);
         config.setTimeout(1000);
-        //        config.setMaxTotal(10);
+        config.setMinIdle(3);
+        config.setMaxTotal(10);
         //        config.setBlockWhenExhausted(true);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
                 e -> new Client(new TBinaryProtocol(new TFramedTransport(e))), config);
