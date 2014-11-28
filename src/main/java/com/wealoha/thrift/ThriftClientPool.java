@@ -78,7 +78,9 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
         this.services = services;
         this.clientFactory = factory;
         this.poolConfig = config;
+        // test if config change
         this.poolConfig.setTestOnReturn(true);
+        this.poolConfig.setTestOnBorrow(true);
         this.pool = new GenericObjectPool<>(new BasePooledObjectFactory<ThriftClient<T>>() {
 
             @Override
