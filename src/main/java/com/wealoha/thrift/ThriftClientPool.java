@@ -135,7 +135,7 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
 
                 // check if return client in current service list if 
                 if (serviceReset) {
-                    if (!services.contains(client.getServiceInfo())) {
+                    if (!ThriftClientPool.this.services.contains(client.getServiceInfo())) {
                         logger.warn("not return object cuase it's from previous config {}", client);
                         client.closeClient();
                         return false;

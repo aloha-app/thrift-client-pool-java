@@ -46,4 +46,9 @@ public class ServiceInfo {
         if (port != other.port) return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "ServiceInfo [host=" + host + ", port=" + port + "]";
+    }
 }
