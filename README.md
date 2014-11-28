@@ -13,19 +13,9 @@ A Thrift Client pool for Java
 
 ## Usage
 
-Install to your maven repo by
+Add to your pom.xml (Currently in OSSRS(https://oss.sonatype.org/content/repositories/snapshots/),
+1.0 formal version will release when we running long enough in real production environment.)
 
-```Shell
-mvn clean package install
-```
-
-or
-
-```Shell
-mvn clean package deploy
-```
-
-Add to your pom.xml (1.0 formal version will release when we running long enough in real production environment.)
 
 ```xml
 <dependency>
