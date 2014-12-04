@@ -13,15 +13,14 @@ A Thrift Client pool for Java
 
 ## Usage
 
-Add to your pom.xml (Currently in OSSRS(https://oss.sonatype.org/content/repositories/snapshots/),
-1.0 formal version will release when we running long enough in real production environment.)
+Add to your pom.xml
 
 
 ```xml
 <dependency>
     <groupId>com.wealoha</groupId>
     <artifactId>thrift-client-pool-java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 </dependency>
 ```
 
