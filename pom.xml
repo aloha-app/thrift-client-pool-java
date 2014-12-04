@@ -6,6 +6,14 @@
     <version>1.0</version>
     <packaging>jar</packaging>
 
+    <url>https://github.com/aloha-app/thrift-client-pool-java</url>
+    
+    <developers>
+        <developer>
+            <name>perlmonk</name>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>The Artistic License 2.0</name>
