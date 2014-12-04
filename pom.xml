@@ -6,6 +6,10 @@
     <version>1.0</version>
     <packaging>jar</packaging>
 
+    <name>thrift-client-pool-java</name>
+
+    <description>A Thrift Client pool for Java</description>
+
     <url>https://github.com/aloha-app/thrift-client-pool-java</url>
     
     <developers>
