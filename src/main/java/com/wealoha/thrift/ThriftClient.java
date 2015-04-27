@@ -20,7 +20,7 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(ThriftClient.class);
 
-    private final TServiceClient client;
+    private final T client;
 
     private final ObjectPool<ThriftClient<T>> pool;
 
@@ -28,7 +28,7 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
 
     private boolean finish;
 
-    public ThriftClient(TServiceClient client, ObjectPool<ThriftClient<T>> pool,
+    public ThriftClient(T client, ObjectPool<ThriftClient<T>> pool,
             ServiceInfo serviceInfo) {
         super();
         this.client = client;
@@ -50,9 +50,8 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
      * 
      * @return
      */
-    @SuppressWarnings("unchecked")
     public T iFace() {
-        return (T) client;
+        return client;
     }
 
     @Override

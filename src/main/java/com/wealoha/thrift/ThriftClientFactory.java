@@ -16,7 +16,7 @@ import org.apache.thrift.transport.TTransport;
  * @author javamonk
  * @createTime 2014年11月22日 下午2:49:53
  */
-public interface ThriftClientFactory {
+public interface ThriftClientFactory<T extends TServiceClient> {
 
     /**
      * return a new client using transport<br/>
@@ -32,6 +32,6 @@ public interface ThriftClientFactory {
      * @param transport
      * @return
      */
-    public TServiceClient createClient(TTransport transport);
+    T createClient(TTransport transport);
 
 }

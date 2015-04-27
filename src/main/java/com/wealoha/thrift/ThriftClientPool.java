@@ -1,26 +1,24 @@
 package com.wealoha.thrift;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
+import com.wealoha.thrift.exception.ConnectionFailException;
+import com.wealoha.thrift.exception.NoBackendServiceException;
+import com.wealoha.thrift.exception.ThriftException;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.thrift.TServiceClient;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.wealoha.thrift.exception.ConnectionFailException;
-import com.wealoha.thrift.exception.NoBackendServiceException;
-import com.wealoha.thrift.exception.ThriftException;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Pool for ThriftClient <br/>
@@ -32,11 +30,11 @@ import com.wealoha.thrift.exception.ThriftException;
  * @author javamonk
  * @createTime 2014年7月4日 下午3:55:16
  */
-public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
+public class ThriftClientPool<T extends TServiceClient> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ThriftClientFactory clientFactory;
+    private final ThriftClientFactory<T> clientFactory;
 
     private final GenericObjectPool<ThriftClient<T>> pool;
 
@@ -48,22 +46,22 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
 
     /**
      * Construct a new pool using default config
-     * 
+     *
      * @param services
      * @param factory
      */
-    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory factory) {
+    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory) {
         this(services, factory, new PoolConfig());
     }
 
     /**
      * Construct a new pool using
-     * 
+     *
      * @param services
      * @param factory
      * @param config
      */
-    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory factory,
+    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory,
             PoolConfig config) {
         if (services == null || services.size() == 0) {
             throw new IllegalArgumentException("services is empty!");
@@ -136,7 +134,7 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
                 // check if return client in current service list if 
                 if (serviceReset) {
                     if (!ThriftClientPool.this.services.contains(client.getServiceInfo())) {
-                        logger.warn("not return object cuase it's from previous config {}", client);
+                        logger.warn("not return object because it's from previous config {}", client);
                         client.closeClient();
                         return false;
                     }
@@ -155,7 +153,7 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
 
     /**
      * set new services for this pool
-     * 
+     *
      * @param services
      */
     public void setServices(List<ServiceInfo> services) {
@@ -172,7 +170,7 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
             throw new NoBackendServiceException();
         }
 
-        TTransport transport = null;
+        TTransport transport;
         if (poolConfig.getTimeout() > 0) {
             transport = new TSocket(serviceInfo.getHost(), serviceInfo.getPort(),
                     poolConfig.getTimeout());
@@ -184,7 +182,7 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
 
     /**
      * get a random service
-     * 
+     *
      * @param serviceList
      * @return
      */
@@ -262,28 +260,24 @@ public class ThriftClientPool<T extends org.apache.thrift.TServiceClient> {
         }
         AtomicBoolean returnToPool = new AtomicBoolean(false);
         return (X) Proxy.newProxyInstance(this.getClass().getClassLoader(), client.iFace()
-                .getClass().getInterfaces(), new InvocationHandler() {
-
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if (returnToPool.get()) {
-                    throw new IllegalStateException("Object returned via iface can only used once!");
-                }
-                boolean success = false;
-                try {
-                    Object result = method.invoke(client.iFace(), args);
-                    success = true;
-                    return result;
-                } finally {
-                    if (success) {
-                        pool.returnObject(client);
-                    } else {
-                        client.closeClient();
-                        pool.invalidateObject(client);
+                .getClass().getInterfaces(), (proxy, method, args) -> {
+                    if (returnToPool.get()) {
+                        throw new IllegalStateException("Object returned via iface can only used once!");
                     }
-                    returnToPool.set(true);
-                }
-            }
-        });
+                    boolean success = false;
+                    try {
+                        Object result = method.invoke(client.iFace(), args);
+                        success = true;
+                        return result;
+                    } finally {
+                        if (success) {
+                            pool.returnObject(client);
+                        } else {
+                            client.closeClient();
+                            pool.invalidateObject(client);
+                        }
+                        returnToPool.set(true);
+                    }
+                });
     }
 }

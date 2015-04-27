@@ -1,11 +1,10 @@
 package com.wealoha.thrift;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
+import com.wealoha.thrift.service.TestThriftService;
+import com.wealoha.thrift.service.TestThriftService.Client;
+import com.wealoha.thrift.service.TestThriftService.Iface;
+import com.wealoha.thrift.service.TestThriftService.Processor;
+import com.wealoha.thrift.service.TestThriftServiceHandler;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TThreadPoolServer;
@@ -19,11 +18,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.wealoha.thrift.service.TestThriftService;
-import com.wealoha.thrift.service.TestThriftService.Client;
-import com.wealoha.thrift.service.TestThriftService.Iface;
-import com.wealoha.thrift.service.TestThriftService.Processor;
-import com.wealoha.thrift.service.TestThriftServiceHandler;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 
@@ -63,12 +63,13 @@ public class TestThriftClientPool {
 
     @Test
     public void testReusingIFace() throws TException {
-        List<ServiceInfo> serverList = Arrays.asList(new ServiceInfo("127.0.0.1", 9090));
+        List<ServiceInfo> serverList = Collections.singletonList(new ServiceInfo("127.0.0.1", 9090));
         PoolConfig config = new PoolConfig();
         config.setFailover(true);
         config.setTimeout(1000);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
-                e -> new Client(new TBinaryProtocol(new TFramedTransport(e))), config);
+                transport -> new Client(new TBinaryProtocol(new TFramedTransport(transport))),
+                config);
 
         Iface iface = pool.iface();
         iface.echo("Hello!");
