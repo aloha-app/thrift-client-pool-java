@@ -83,12 +83,7 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <fork>true</fork>
-                    <verbose>true</verbose>
                     <encoding>UTF-8</encoding>
-                    <compilerArguments>
-                        <sourcepath>${project.basedir}/src/main/java</sourcepath>
-                    </compilerArguments>
                 </configuration>
             </plugin>
 
@@ -113,6 +108,7 @@
                 <version>2.9.1</version>
                 <configuration>
                     <additionalparam>-Xdoclint:none</additionalparam>
+                    <encoding>UTF-8</encoding>
                 </configuration>
                 <executions>
                     <execution>
