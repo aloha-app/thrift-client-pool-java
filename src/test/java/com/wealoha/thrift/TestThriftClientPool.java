@@ -49,13 +49,7 @@ public class TestThriftClientPool {
             TThreadPoolServer server = new TThreadPoolServer(processor);
 
             logger.info("Starting test server...");
-            new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    server.serve();
-                }
-            }).start();
+            new Thread(server::serve).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,7 +62,7 @@ public class TestThriftClientPool {
         config.setFailover(true);
         config.setTimeout(1000);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
-                transport -> new Client(new TBinaryProtocol(new TFramedTransport(transport))),
+                Client::new,
                 config);
 
         Iface iface = pool.iface();
@@ -80,7 +74,7 @@ public class TestThriftClientPool {
             logger.info("exception thrown expected!", e);
             exceptionThrow = true;
         }
-        Assert.assertTrue("execption must thrown", exceptionThrow);
+        Assert.assertTrue("exception must thrown", exceptionThrow);
     }
 
     @Test
@@ -97,41 +91,33 @@ public class TestThriftClientPool {
         config.setMaxTotal(10);
         //        config.setBlockWhenExhausted(true);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
-                e -> new Client(new TBinaryProtocol(new TFramedTransport(e))), config);
+                Client::new, config);
         // pool.setServices(serverList);
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         for (int i = 0; i < 100; i++) {
             int counter = i;
-            executorService.submit(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        try (ThriftClient<Client> client = pool.getClient()) {
-                            Iface iFace = client.iFace();
-                            String response = iFace.echo("Hello " + counter + "!");
-                            logger.info("get response: {}", response);
-                            client.finish();
-                        }
-                    } catch (Throwable e) {
-                        logger.error("get client fail", e);
+            executorService.submit(() -> {
+                try {
+                    try (ThriftClient<Client> client = pool.getClient()) {
+                        Iface iFace = client.iFace();
+                        String response = iFace.echo("Hello " + counter + "!");
+                        logger.info("get response: {}", response);
+                        client.finish();
                     }
+                } catch (Throwable e) {
+                    logger.error("get client fail", e);
                 }
             });
 
-            executorService.submit(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        Iface iFace = pool.iface();
-                        String response = iFace.echo("Hello " + counter + "!");
-                        logger.info("get response: {}", response);
-                    } catch (Throwable e) {
-                        logger.error("get client fail", e);
-                    }
+            executorService.submit(() -> {
+                try {
+                    Iface iFace = pool.iface();
+                    String response = iFace.echo("Hello " + counter + "!");
+                    logger.info("get response: {}", response);
+                } catch (Throwable e) {
+                    logger.error("get client fail", e);
                 }
             });
         }
