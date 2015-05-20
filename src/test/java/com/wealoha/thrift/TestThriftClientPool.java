@@ -6,7 +6,6 @@ import com.wealoha.thrift.service.TestThriftService.Iface;
 import com.wealoha.thrift.service.TestThriftService.Processor;
 import com.wealoha.thrift.service.TestThriftServiceHandler;
 import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.server.TThreadPoolServer.Args;
 import org.apache.thrift.transport.TFramedTransport;

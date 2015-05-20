@@ -1,12 +1,10 @@
 package com.wealoha.thrift;
 
-import java.io.Closeable;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.thrift.TServiceClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.io.Closeable;
 
 /**
  * The thrift client which hold the connection to backend server.<br/>
