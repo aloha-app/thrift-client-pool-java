@@ -1,11 +1,10 @@
 package com.wealoha.thrift;
 
-import java.io.Closeable;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.thrift.TServiceClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.io.Closeable;
 
 /**
  * The thrift client which hold the connection to backend server.<br/>
@@ -16,11 +15,10 @@ import org.slf4j.LoggerFactory;
  * @author javamonk
  * @createTime 2014年7月4日 下午3:50:51
  */
+@Slf4j
 public class ThriftClient<T extends TServiceClient> implements Closeable {
 
-    private static final Logger logger = LoggerFactory.getLogger(ThriftClient.class);
-
-    private final TServiceClient client;
+    private final T client;
 
     private final ObjectPool<ThriftClient<T>> pool;
 
@@ -28,7 +26,7 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
 
     private boolean finish;
 
-    public ThriftClient(TServiceClient client, ObjectPool<ThriftClient<T>> pool,
+    public ThriftClient(T client, ObjectPool<ThriftClient<T>> pool,
             ServiceInfo serviceInfo) {
         super();
         this.client = client;
@@ -50,31 +48,30 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
      * 
      * @return
      */
-    @SuppressWarnings("unchecked")
     public T iFace() {
-        return (T) client;
+        return client;
     }
 
     @Override
     public void close() {
         try {
             if (finish) {
-                logger.info("return object to pool: " + this);
+                log.info("return object to pool: " + this);
                 finish = false;
                 pool.returnObject(this);
             } else {
-                logger.warn("not return object cause not finish {}", client);
+                log.warn("not return object cause not finish {}", client);
                 closeClient();
                 pool.invalidateObject(this);
             }
         } catch (Exception e) {
-            logger.warn("return object fail, close", e);
+            log.warn("return object fail, close", e);
             closeClient();
         }
     }
 
     void closeClient() {
-        logger.debug("close client {}", this);
+        log.debug("close client {}", this);
         ThriftUtil.closeClient(this.client);
     }
 

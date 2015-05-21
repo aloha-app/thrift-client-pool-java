@@ -1,18 +1,16 @@
 package com.wealoha.thrift;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TServiceClient;
 import org.apache.thrift.protocol.TProtocol;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @author javamonk
  * @createTime 2014年11月22日 下午8:40:26
  */
+@Slf4j
 public abstract class ThriftUtil {
-
-    private static final Logger logger = LoggerFactory.getLogger(ThriftUtil.class);
 
     /**
      * close internal transport
@@ -29,7 +27,7 @@ public abstract class ThriftUtil {
                 proto.getTransport().close();
             }
         } catch (Throwable e) {
-            logger.warn("close input transport fail", e);
+            log.warn("close input transport fail", e);
         }
         try {
             TProtocol proto = client.getOutputProtocol();
@@ -37,7 +35,7 @@ public abstract class ThriftUtil {
                 proto.getTransport().close();
             }
         } catch (Throwable e) {
-            logger.warn("close output transport fail", e);
+            log.warn("close output transport fail", e);
         }
 
     }
