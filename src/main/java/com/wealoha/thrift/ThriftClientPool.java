@@ -1,9 +1,13 @@
 package com.wealoha.thrift;
 
-import com.wealoha.thrift.exception.ConnectionFailException;
-import com.wealoha.thrift.exception.NoBackendServiceException;
-import com.wealoha.thrift.exception.ThriftException;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -14,11 +18,9 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import com.wealoha.thrift.exception.ConnectionFailException;
+import com.wealoha.thrift.exception.NoBackendServiceException;
+import com.wealoha.thrift.exception.ThriftException;
 
 /**
  * Pool for ThriftClient <br/>
@@ -63,12 +65,12 @@ public class ThriftClientPool<T extends TServiceClient> {
      * @param config
      */
     public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory,
-                            PoolConfig config) {
+            PoolConfig config) {
         this(services, factory, config, null);
     }
 
     public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory,
-                            PoolConfig config, ThriftProtocolFactory pFactory) {
+            PoolConfig config, ThriftProtocolFactory pFactory) {
         if (services == null || services.size() == 0) {
             throw new IllegalArgumentException("services is empty!");
         }
@@ -122,8 +124,10 @@ public class ThriftClientPool<T extends TServiceClient> {
                     }
                 }
 
-                ThriftClient<T> client = new ThriftClient<>(clientFactory.createClient(protocolFactory.orElse(new ThriftBinaryProtocolFactory()).makeProtocol(transport)),
-                        pool, serviceInfo);
+                ThriftClient<T> client = new ThriftClient<>(
+                        clientFactory.createClient(protocolFactory.orElse(
+                                new ThriftBinaryProtocolFactory()).makeProtocol(transport)), pool,
+                        serviceInfo);
 
                 log.debug("create new object for pool {}", client);
                 return client;
@@ -156,6 +160,10 @@ public class ThriftClientPool<T extends TServiceClient> {
                 super.destroyObject(p);
             }
         }, poolConfig);
+    }
+
+    public List<ServiceInfo> getServices() {
+        return services;
     }
 
     /**
@@ -214,11 +222,11 @@ public class ThriftClientPool<T extends TServiceClient> {
      * @return
      * @throws ThriftException
      * @throws NoBackendServiceException if
-     *                                   {@link PoolConfig#setFailover(boolean)} is set and no
-     *                                   service can connect to
-     * @throws ConnectionFailException   if
-     *                                   {@link PoolConfig#setFailover(boolean)} not set and
-     *                                   connection fail
+     *         {@link PoolConfig#setFailover(boolean)} is set and no
+     *         service can connect to
+     * @throws ConnectionFailException if
+     *         {@link PoolConfig#setFailover(boolean)} not set and
+     *         connection fail
      */
     public ThriftClient<T> getClient() throws ThriftException {
         try {
@@ -247,12 +255,12 @@ public class ThriftClientPool<T extends TServiceClient> {
      * @return
      * @throws ThriftException
      * @throws NoBackendServiceException if
-     *                                   {@link PoolConfig#setFailover(boolean)} is set and no
-     *                                   service can connect to
-     * @throws ConnectionFailException   if
-     *                                   {@link PoolConfig#setFailover(boolean)} not set and
-     *                                   connection fail
-     * @throws IllegalStateException     if call method on return object twice
+     *         {@link PoolConfig#setFailover(boolean)} is set and no
+     *         service can connect to
+     * @throws ConnectionFailException if
+     *         {@link PoolConfig#setFailover(boolean)} not set and
+     *         connection fail
+     * @throws IllegalStateException if call method on return object twice
      */
     @SuppressWarnings("unchecked")
     public <X> X iface() {
@@ -286,5 +294,13 @@ public class ThriftClientPool<T extends TServiceClient> {
                 returnToPool.set(true);
             }
         });
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (pool != null) {
+            pool.close();
+        }
+        super.finalize();
     }
 }

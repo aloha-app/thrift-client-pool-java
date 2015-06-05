@@ -13,6 +13,10 @@ public class ConnectionFailException extends ThriftException {
         super();
     }
 
+    public ConnectionFailException(String message) {
+        super(message);
+    }
+
     public ConnectionFailException(String message, Throwable cause) {
         super(message, cause);
     }
