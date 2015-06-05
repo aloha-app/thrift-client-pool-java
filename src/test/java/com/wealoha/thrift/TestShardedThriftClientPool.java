@@ -1,9 +1,7 @@
 package com.wealoha.thrift;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -35,8 +33,6 @@ public class TestShardedThriftClientPool {
         ShardedThriftClientPool<Integer, Client> shardedPool = new ShardedThriftClientPool<>(
                 serviceList, //
                 key -> key, //
-                servers -> servers.stream().map(server -> Collections.singletonList(server))
-                        .collect(Collectors.toList()), //
                 servers -> new ThriftClientPool<>(servers, Client::new, config));
 
         Integer key = 10;

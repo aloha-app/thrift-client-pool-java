@@ -1,9 +1,11 @@
 package com.wealoha.thrift;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,6 +61,22 @@ public class ShardedThriftClientPool<K, T extends TServiceClient> {
         this.clientPoolFunction = clientPoolFunction;
 
         init(serviceList);
+    }
+
+    /**
+     * one server one partition
+     * 
+     * @param serviceList
+     * @param hashFunction get a key's hash
+     * 
+     * @param clientPoolFunction
+     */
+    public ShardedThriftClientPool(List<ServiceInfo> serviceList,
+            Function<K, Integer> hashFunction,
+            Function<List<ServiceInfo>, ThriftClientPool<T>> clientPoolFunction) {
+        this(serviceList, hashFunction, servers -> servers.stream()
+                .map(server -> Collections.singletonList(server)).collect(Collectors.toList()),
+                clientPoolFunction);
     }
 
     private void init(List<ServiceInfo> services) {
