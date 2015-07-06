@@ -1,10 +1,11 @@
 package com.wealoha.thrift;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.Closeable;
+
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.thrift.TServiceClient;
-
-import java.io.Closeable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The thrift client which hold the connection to backend server.<br/>
@@ -15,8 +16,9 @@ import java.io.Closeable;
  * @author javamonk
  * @createTime 2014年7月4日 下午3:50:51
  */
-@Slf4j
 public class ThriftClient<T extends TServiceClient> implements Closeable {
+
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     private final T client;
 
@@ -26,8 +28,7 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
 
     private boolean finish;
 
-    public ThriftClient(T client, ObjectPool<ThriftClient<T>> pool,
-            ServiceInfo serviceInfo) {
+    public ThriftClient(T client, ObjectPool<ThriftClient<T>> pool, ServiceInfo serviceInfo) {
         super();
         this.client = client;
         this.pool = pool;
@@ -56,22 +57,22 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
     public void close() {
         try {
             if (finish) {
-                log.info("return object to pool: " + this);
+                logger.info("return object to pool: " + this);
                 finish = false;
                 pool.returnObject(this);
             } else {
-                log.warn("not return object cause not finish {}", client);
+                logger.warn("not return object cause not finish {}", client);
                 closeClient();
                 pool.invalidateObject(this);
             }
         } catch (Exception e) {
-            log.warn("return object fail, close", e);
+            logger.warn("return object fail, close", e);
             closeClient();
         }
     }
 
     void closeClient() {
-        log.debug("close client {}", this);
+        logger.debug("close client {}", this);
         ThriftUtil.closeClient(this.client);
     }
 

@@ -2,11 +2,9 @@ package com.wealoha.thrift;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -17,6 +15,8 @@ import org.apache.thrift.TServiceClient;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.wealoha.thrift.exception.ConnectionFailException;
 import com.wealoha.thrift.exception.NoBackendServiceException;
@@ -32,12 +32,11 @@ import com.wealoha.thrift.exception.ThriftException;
  * @author javamonk
  * @createTime 2014年7月4日 下午3:55:16
  */
-@Slf4j
 public class ThriftClientPool<T extends TServiceClient> {
 
-    private final ThriftClientFactory<T> clientFactory;
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Optional<ThriftProtocolFactory> protocolFactory;
+    private final Function<TTransport, T> clientFactory;
 
     private final GenericObjectPool<ThriftClient<T>> pool;
 
@@ -53,7 +52,7 @@ public class ThriftClientPool<T extends TServiceClient> {
      * @param services
      * @param factory
      */
-    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory) {
+    public ThriftClientPool(List<ServiceInfo> services, Function<TTransport, T> factory) {
         this(services, factory, new PoolConfig(), null);
     }
 
@@ -61,15 +60,19 @@ public class ThriftClientPool<T extends TServiceClient> {
      * Construct a new pool using
      *
      * @param services
-     * @param factory
+     * @param factory All IFace(subclass of TServiceClient) were generated
+     *        by thrift. We don't know their types. Since they all extends
+     *        super class TServiceClient,
+     *        construct a new Client need only just one line:
+     *        transport->new Client(new TBinaryProtocol(transport))
      * @param config
      */
-    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory,
+    public ThriftClientPool(List<ServiceInfo> services, Function<TTransport, T> factory,
             PoolConfig config) {
         this(services, factory, config, null);
     }
 
-    public ThriftClientPool(List<ServiceInfo> services, ThriftClientFactory<T> factory,
+    public ThriftClientPool(List<ServiceInfo> services, Function<TTransport, T> factory,
             PoolConfig config, ThriftProtocolFactory pFactory) {
         if (services == null || services.size() == 0) {
             throw new IllegalArgumentException("services is empty!");
@@ -84,7 +87,6 @@ public class ThriftClientPool<T extends TServiceClient> {
         this.services = services;
         this.clientFactory = factory;
         this.poolConfig = config;
-        this.protocolFactory = Optional.ofNullable(pFactory);
         // test if config change
         this.poolConfig.setTestOnReturn(true);
         this.poolConfig.setTestOnBorrow(true);
@@ -101,7 +103,7 @@ public class ThriftClientPool<T extends TServiceClient> {
                 try {
                     transport.open();
                 } catch (TTransportException e) {
-                    log.info("transport open fail service: host={}, port={}",
+                    logger.info("transport open fail service: host={}, port={}",
                             serviceInfo.getHost(), serviceInfo.getPort());
                     if (poolConfig.isFailover()) {
                         while (true) {
@@ -110,12 +112,12 @@ public class ThriftClientPool<T extends TServiceClient> {
                                 serviceList = removeFailService(serviceList, serviceInfo);
                                 serviceInfo = getRandomService(serviceList);
                                 transport = getTransport(serviceInfo); // while break here
-                                log.info("failover to next service host={}, port={}",
+                                logger.info("failover to next service host={}, port={}",
                                         serviceInfo.getHost(), serviceInfo.getPort());
                                 transport.open();
                                 break;
                             } catch (TTransportException e2) {
-                                log.warn("failover fail, services left: {}", serviceList.size());
+                                logger.warn("failover fail, services left: {}", serviceList.size());
                             }
                         }
                     } else {
@@ -124,12 +126,10 @@ public class ThriftClientPool<T extends TServiceClient> {
                     }
                 }
 
-                ThriftClient<T> client = new ThriftClient<>(
-                        clientFactory.createClient(protocolFactory.orElse(
-                                new ThriftBinaryProtocolFactory()).makeProtocol(transport)), pool,
+                ThriftClient<T> client = new ThriftClient<>(clientFactory.apply(transport), pool,
                         serviceInfo);
 
-                log.debug("create new object for pool {}", client);
+                logger.debug("create new object for pool {}", client);
                 return client;
             }
 
@@ -145,7 +145,8 @@ public class ThriftClientPool<T extends TServiceClient> {
                 // check if return client in current service list if 
                 if (serviceReset) {
                     if (!ThriftClientPool.this.services.contains(client.getServiceInfo())) {
-                        log.warn("not return object because it's from previous config {}", client);
+                        logger.warn("not return object because it's from previous config {}",
+                                client);
                         client.closeClient();
                         return false;
                     }
@@ -209,7 +210,7 @@ public class ThriftClientPool<T extends TServiceClient> {
     }
 
     private List<ServiceInfo> removeFailService(List<ServiceInfo> list, ServiceInfo serviceInfo) {
-        log.info("remove service from current service list: host={}, port={}",
+        logger.info("remove service from current service list: host={}, port={}",
                 serviceInfo.getHost(), serviceInfo.getPort());
         return list.stream() //
                 .filter(si -> !serviceInfo.equals(si)) //

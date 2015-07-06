@@ -3,6 +3,7 @@ package com.wealoha.thrift;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.thrift.protocol.TBinaryProtocol;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,7 +34,8 @@ public class TestShardedThriftClientPool {
         ShardedThriftClientPool<Integer, Client> shardedPool = new ShardedThriftClientPool<>(
                 serviceList, //
                 key -> key, //
-                servers -> new ThriftClientPool<>(servers, Client::new, config));
+                servers -> new ThriftClientPool<>(servers, transport -> new Client(
+                        new TBinaryProtocol(transport)), config));
 
         Integer key = 10;
         ThriftClientPool<Client> pool = shardedPool.getShardedPool(key);
@@ -62,7 +64,8 @@ public class TestShardedThriftClientPool {
                             Arrays.asList(servers.get(2), servers.get(3)), //
                             Arrays.asList(servers.get(4)));
                 }, //
-                servers -> new ThriftClientPool<>(servers, Client::new, config));
+                servers -> new ThriftClientPool<>(servers, transport -> new Client(
+                        new TBinaryProtocol(transport)), config));
 
         Integer key = 10;
         ThriftClientPool<Client> pool = shardedPool.getShardedPool(key);

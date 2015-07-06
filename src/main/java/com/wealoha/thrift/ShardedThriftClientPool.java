@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.apache.thrift.TServiceClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.wealoha.thrift.exception.NoBackendServiceException;
 
@@ -28,8 +28,9 @@ import com.wealoha.thrift.exception.NoBackendServiceException;
  * @author javamonk
  * @createTime 2015年6月5日 上午11:58:08
  */
-@Slf4j
 public class ShardedThriftClientPool<K, T extends TServiceClient> {
+
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     private List<ServiceInfo> serviceList;
 
@@ -94,7 +95,7 @@ public class ShardedThriftClientPool<K, T extends TServiceClient> {
     public ThriftClientPool<T> getShardedPool(K key) throws NoBackendServiceException {
         int hash = hashFunction.apply(key);
         int shard = hash % servicePartitions.size();
-        log.debug("getPool by key: hash={}, shard={}/{}", hash, shard, servicePartitions.size());
+        logger.debug("getPool by key: hash={}, shard={}/{}", hash, shard, servicePartitions.size());
 
         List<ServiceInfo> servers = servicePartitions.get(shard);
         if (servers == null || servers.size() == 0) {
@@ -106,7 +107,7 @@ public class ShardedThriftClientPool<K, T extends TServiceClient> {
             synchronized (poolMap) {
                 pool = poolMap.get(shard);
                 if (pool == null) {
-                    log.debug("init client pool: shard={}, servers={}", shard, servers);
+                    logger.debug("init client pool: shard={}, servers={}", shard, servers);
                     pool = clientPoolFunction.apply(servers);
                     poolMap.put(shard, pool);
                 }
@@ -126,7 +127,7 @@ public class ShardedThriftClientPool<K, T extends TServiceClient> {
      */
     public Map<Integer, ThriftClientPool<T>> setServices(List<ServiceInfo> services) {
         synchronized (poolMap) {
-            log.info("reinit pool using new serviceList: {}", services);
+            logger.info("reinit pool using new serviceList: {}", services);
             Map<Integer, ThriftClientPool<T>> previousMap = poolMap;
 
             init(services);
