@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.transport.TFramedTransport;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class TestShardedThriftClientPool {
                 serviceList, //
                 key -> key, //
                 servers -> new ThriftClientPool<>(servers, transport -> new Client(
-                        new TBinaryProtocol(transport)), config));
+                        new TBinaryProtocol(new TFramedTransport(transport))), config));
 
         Integer key = 10;
         ThriftClientPool<Client> pool = shardedPool.getShardedPool(key);
@@ -65,7 +66,7 @@ public class TestShardedThriftClientPool {
                             Arrays.asList(servers.get(4)));
                 }, //
                 servers -> new ThriftClientPool<>(servers, transport -> new Client(
-                        new TBinaryProtocol(transport)), config));
+                        new TBinaryProtocol(new TFramedTransport(transport))), config));
 
         Integer key = 10;
         ThriftClientPool<Client> pool = shardedPool.getShardedPool(key);

@@ -51,7 +51,7 @@ public class TestThriftClientPool {
 
             logger.info("Starting test server...");
             new Thread(server::serve).start();
-            Thread.sleep(5000); // waiting server init
+            Thread.sleep(1000); // waiting server init
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,7 +65,8 @@ public class TestThriftClientPool {
         config.setFailover(true);
         config.setTimeout(1000);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
-                transport -> new Client(new TBinaryProtocol(transport)), config);
+                transport -> new Client(new TBinaryProtocol(new TFramedTransport(transport))),
+                config);
 
         Iface iface = pool.iface();
         iface.echo("Hello!");
@@ -93,7 +94,8 @@ public class TestThriftClientPool {
         config.setMaxTotal(10);
         //        config.setBlockWhenExhausted(true);
         ThriftClientPool<TestThriftService.Client> pool = new ThriftClientPool<>(serverList,
-                transport -> new Client(new TBinaryProtocol(transport)), config);
+                transport -> new Client(new TBinaryProtocol(new TFramedTransport(transport))),
+                config);
         // pool.setServices(serverList);
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
