@@ -57,7 +57,7 @@ public class ThriftClient<T extends TServiceClient> implements Closeable {
     public void close() {
         try {
             if (finish) {
-                logger.info("return object to pool: " + this);
+                logger.debug("return object to pool: " + this);
                 finish = false;
                 pool.returnObject(this);
             } else {
