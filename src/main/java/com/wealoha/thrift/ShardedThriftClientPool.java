@@ -135,4 +135,7 @@ public class ShardedThriftClientPool<K, T extends TServiceClient> {
         }
     }
 
+    public int getPartitionSize() {
+        return servicePartitions.size();
+    }
 }
