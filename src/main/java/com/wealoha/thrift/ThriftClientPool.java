@@ -1,6 +1,7 @@
 package com.wealoha.thrift;
 
 import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationTargetException
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -285,6 +286,12 @@ public class ThriftClientPool<T extends TServiceClient> {
                 Object result = method.invoke(client.iFace(), args);
                 success = true;
                 return result;
+            } catch (InvocationTargetException e) {
+                // Invocation Exceptions are thrown when an error occurs inside the invoke call.  
+                // For the purposes of this proxy class, the InvocationException should be unwrapped
+                // and the underlying target exception should be thrown instead. This way, the Proxy 
+                // instance will recognized the Checked exception and throw that back to the calling method.
+                throw e.getTargetException();
             } catch (Throwable e) {
                 logger.warn("invoke fail", e);
                 throw e;
