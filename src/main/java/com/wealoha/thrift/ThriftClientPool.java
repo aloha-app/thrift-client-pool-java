@@ -264,7 +264,7 @@ public class ThriftClientPool<T extends TServiceClient> {
      * @throws IllegalStateException if call method on return object twice
      */
     @SuppressWarnings("unchecked")
-    public <X> X iface() {
+    public <X> X iface() throws ThriftException {
         ThriftClient<T> client;
         try {
             client = pool.borrowObject();
@@ -285,6 +285,9 @@ public class ThriftClientPool<T extends TServiceClient> {
                 Object result = method.invoke(client.iFace(), args);
                 success = true;
                 return result;
+            } catch (Throwable e) {
+                logger.warn("invoke fail", e);
+                throw e;
             } finally {
                 if (success) {
                     pool.returnObject(client);
