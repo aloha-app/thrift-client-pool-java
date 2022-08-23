@@ -1,6 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <groupId>com.wealoha</groupId>
     <artifactId>thrift-client-pool-java</artifactId>
     <version>1.2</version>
     <packaging>jar</packaging>
@@ -10,7 +11,12 @@
     <description>A Thrift Client pool for Java</description>
 
     <url>https://github.com/aloha-app/thrift-client-pool-java</url>
-    
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
     <developers>
         <developer>
             <name>perlmonk</name>
